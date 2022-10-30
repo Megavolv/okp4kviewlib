@@ -40,14 +40,14 @@ func NewList(path string) *List {
 
 }
 
-func (l *List) GetKeys(target, count int64) (data string, tail int64, err error) {
+func (l *List) GetKeys(target, count int64) (data string, tail, total int64, err error) {
 	k, i := l.FindSuitable(target)
 
 	if target+count >= k.End {
 		tail = target + count - k.End
 		count = k.End - target
 	}
-
+	total = count
 	new_target := target - i.Start
 	data, err = GetKeysByOneFile(k.f, i.f, new_target, new_target+count)
 
