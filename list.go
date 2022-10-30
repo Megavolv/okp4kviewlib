@@ -43,9 +43,10 @@ func NewList(path string) *List {
 
 func (l *List) GetKeys(target, count int64) (data string, total int64, err error) {
 	var next_data string
+	var k, i *File
 
 	for count > 0 {
-		k, i, err := l.FindSuitable(target)
+		k, i, err = l.FindSuitable(target)
 		if err != nil {
 			break
 		}
