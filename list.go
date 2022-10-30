@@ -40,19 +40,38 @@ func NewList(path string) *List {
 
 }
 
-func (l *List) GetKeys(target, count int64) (data string, tail, total int64, err error) {
-	k, i := l.FindSuitable(target)
+func (l *List) GetKeys(target, count int64) (data string, total int64, err error) {
+	var next_data string
 
-	if target+count >= k.End {
-		tail = target + count - k.End
-		count = k.End - target
+	for count > 0 {
+		k, i := l.FindSuitable(target)
+
+		if target+count >= k.End {
+			count = k.End - target
+		}
+
+		total = count
+
+		new_target := target - i.Start
+		next_data, err = GetKeysByOneFile(k.f, i.f, new_target, new_target+count)
+
+		// данные не найдены
+		if err != nil {
+			break
+		}
+
+		// Получено меньше, чем планировали
+		if total == count {
+			break
+		}
+
+		data += next_data
+
+		target = target + total
+		count = count - total
 	}
-	total = count
-	new_target := target - i.Start
-	data, err = GetKeysByOneFile(k.f, i.f, new_target, new_target+count)
 
 	return
-
 }
 
 func (l *List) AddKeyFile(path, name string) {
