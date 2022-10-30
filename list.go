@@ -1,6 +1,7 @@
 package okp4kviewlib
 
 import (
+	"errors"
 	"io/ioutil"
 	"path/filepath"
 )
@@ -44,7 +45,10 @@ func (l *List) GetKeys(target, count int64) (data string, total int64, err error
 	var next_data string
 
 	for count > 0 {
-		k, i := l.FindSuitable(target)
+		k, i, err := l.FindSuitable(target)
+		if err != nil {
+			break
+		}
 
 		if target+count >= k.End {
 			count = k.End - target
@@ -82,7 +86,7 @@ func (l *List) AddIndexFile(path, name string) {
 	l.Indexes = append(l.Indexes, LoadFile(path, name))
 }
 
-func (l *List) FindSuitable(target int64) (key *File, index *File) {
+func (l *List) FindSuitable(target int64) (key *File, index *File, err error) {
 	key = nil
 	index = nil
 	for _, f := range l.Keys {
@@ -95,6 +99,10 @@ func (l *List) FindSuitable(target int64) (key *File, index *File) {
 		if target >= f.Start && target < f.End {
 			index = f
 		}
+	}
+
+	if key == nil || index == nil {
+		err = errors.New("Index out of range")
 	}
 
 	return
