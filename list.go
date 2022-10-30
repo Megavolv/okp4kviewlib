@@ -2,6 +2,7 @@ package okp4kviewlib
 
 import (
 	"errors"
+
 	"io/ioutil"
 	"path/filepath"
 )
@@ -41,42 +42,45 @@ func NewList(path string) *List {
 
 }
 
-func (l *List) GetKeys(target, count int64) (data string, total int64, err error) {
-	var next_data string
-	var k, i *File
+// Умеет получать с пересечением границы файлов
+func (l *List) GetKeys(target, count int64) (data string, err error) {
+	var tdata string
+	var total int64
 
 	for count > 0 {
-		k, i, err = l.FindSuitable(target)
-		if err != nil {
+		tdata, total, err = l.GetLimitedKeys(target, count)
+		if err != nil { // данные не найдены
 			break
 		}
-
-		if target+count >= k.End {
-			count = k.End - target
-		}
-
-		total = count
-
-		new_target := target - i.Start
-		next_data, err = GetKeysByOneFile(k.f, i.f, new_target, new_target+count)
-
-		// данные не найдены
-		if err != nil {
-			break
-		}
+		data += tdata
 
 		// Получено меньше, чем планировали
 		if total == count {
 			break
 		}
 
-		data += next_data
-
 		target = target + total
 		count = count - total
 	}
+	return
+}
+
+// GetLimitedKeys возвращает ключи из одного файла
+func (l *List) GetLimitedKeys(target, count int64) (data string, total int64, err error) {
+	k, i, err := l.FindSuitable(target)
+	if err != nil {
+		return
+	}
+
+	if target+count >= k.End {
+		count = k.End - target
+	}
+	total = count
+	new_target := target - i.Start
+	data, err = GetKeysByOneFile(k.f, i.f, new_target, new_target+count)
 
 	return
+
 }
 
 func (l *List) AddKeyFile(path, name string) {
