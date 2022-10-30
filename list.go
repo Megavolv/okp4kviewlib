@@ -29,10 +29,10 @@ func NewList(path string) *List {
 		switch filepath.Ext(file.Name()) {
 		case ".idx":
 
-			list.AddIndexFile(file.Name())
+			list.AddIndexFile(path, file.Name())
 		case ".json":
 
-			list.AddKeyFile(file.Name())
+			list.AddKeyFile(path, file.Name())
 		}
 	}
 
@@ -55,12 +55,12 @@ func (l *List) GetKeys(target, count int64) (data string, tail int64, err error)
 
 }
 
-func (l *List) AddKeyFile(name string) {
-	l.Keys = append(l.Keys, LoadFile(name))
+func (l *List) AddKeyFile(path, name string) {
+	l.Keys = append(l.Keys, LoadFile(path, name))
 }
 
-func (l *List) AddIndexFile(name string) {
-	l.Indexes = append(l.Indexes, LoadFile(name))
+func (l *List) AddIndexFile(path, name string) {
+	l.Indexes = append(l.Indexes, LoadFile(path, name))
 }
 
 func (l *List) FindSuitable(target int64) (key *File, index *File) {

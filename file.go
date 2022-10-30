@@ -2,6 +2,7 @@ package okp4kviewlib
 
 import (
 	"encoding/binary"
+	"path/filepath"
 
 	"os"
 	"strconv"
@@ -58,7 +59,7 @@ func GetKeyPosition(findex *os.File, position int64) (key_offset uint32, err err
 	return
 }
 
-func LoadFile(name string) *File {
+func LoadFile(path, name string) *File {
 	data := strings.Split(name, ".")
 
 	start_end := strings.Split(data[1], "-")
@@ -79,7 +80,7 @@ func LoadFile(name string) *File {
 		End:   end,
 	}
 
-	f.f, err = os.OpenFile(name, os.O_RDONLY, 0755)
+	f.f, err = os.OpenFile(filepath.Join(path, name), os.O_RDONLY, 0755)
 	if err != nil {
 		panic(err)
 	}
