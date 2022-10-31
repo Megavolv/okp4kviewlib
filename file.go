@@ -2,6 +2,7 @@ package okp4kviewlib
 
 import (
 	"encoding/binary"
+	"fmt"
 	"path/filepath"
 
 	"os"
@@ -27,12 +28,17 @@ func GetKeysByOneFile(fkey, findex *os.File, start, end int64) (string, error) {
 		b = uint32(info.Size())
 	}
 
+	fmt.Printf("a-%d b-%d diff-%d", a, b, b-a)
+	fmt.Println("Use kfile name ", fkey.Name())
+
 	_, err = fkey.Seek(int64(a), 0)
 	if err != nil {
 		panic(err)
 	}
 
 	kbuf := make([]byte, b-a-1)
+
+	fmt.Println("kbuf len ", b-a-1)
 
 	_, err = fkey.Read(kbuf)
 	if err != nil {
@@ -43,19 +49,19 @@ func GetKeysByOneFile(fkey, findex *os.File, start, end int64) (string, error) {
 }
 
 func GetKeyPosition(findex *os.File, position int64) (key_offset uint32, err error) {
-	_, err = findex.Seek(position*4, 0)
+	_, err = findex.Seek(position*8, 0)
 	if err != nil {
 		return 0, err
 	}
 
-	buf := make([]byte, 4)
+	buf := make([]byte, 8)
 
 	_, err = findex.Read(buf)
 	if err != nil {
 		return 0, err
 	}
 
-	key_offset = binary.LittleEndian.Uint32(buf[0:4])
+	key_offset = binary.LittleEndian.Uint32(buf[0:8])
 	return
 }
 
@@ -63,13 +69,13 @@ func LoadFile(path, name string) *File {
 	data := strings.Split(name, ".")
 
 	start_end := strings.Split(data[1], "-")
-	start, err := strconv.ParseInt(start_end[0], 10, 32)
+	start, err := strconv.ParseInt(start_end[0], 10, 64)
 
 	if err != nil {
 		panic(err)
 	}
 
-	end, err := strconv.ParseInt(start_end[1], 10, 32)
+	end, err := strconv.ParseInt(start_end[1], 10, 64)
 	if err != nil {
 		panic(err)
 	}

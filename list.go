@@ -2,6 +2,7 @@ package okp4kviewlib
 
 import (
 	"errors"
+	"fmt"
 
 	"io/ioutil"
 	"path/filepath"
@@ -30,11 +31,9 @@ func NewList(path string) *List {
 
 		switch filepath.Ext(file.Name()) {
 		case ".idx":
-
-			list.AddIndexFile(path, file.Name())
+			list.Indexes = append(list.Indexes, LoadFile(path, file.Name()))
 		case ".json":
-
-			list.AddKeyFile(path, file.Name())
+			list.Keys = append(list.Keys, LoadFile(path, file.Name()))
 		}
 	}
 
@@ -71,24 +70,19 @@ func (l *List) GetLimitedKeys(target, count int64) (data string, total int64, er
 	if err != nil {
 		return
 	}
+	fmt.Println(k, i)
 
 	if target+count >= k.End {
 		count = k.End - target
 	}
+
 	total = count
+
 	new_target := target - i.Start
+
 	data, err = GetKeysByOneFile(k.f, i.f, new_target, new_target+count)
 
 	return
-
-}
-
-func (l *List) AddKeyFile(path, name string) {
-	l.Keys = append(l.Keys, LoadFile(path, name))
-}
-
-func (l *List) AddIndexFile(path, name string) {
-	l.Indexes = append(l.Indexes, LoadFile(path, name))
 }
 
 func (l *List) FindSuitable(target int64) (key *File, index *File, err error) {
