@@ -2,7 +2,6 @@ package okp4kviewlib
 
 import (
 	"errors"
-	"fmt"
 
 	"io/ioutil"
 	"path/filepath"
@@ -70,7 +69,6 @@ func (l *List) GetLimitedKeys(target, count int64) (data string, total int64, er
 	if err != nil {
 		return
 	}
-	fmt.Println(k, i)
 
 	if target+count >= k.End {
 		count = k.End - target
