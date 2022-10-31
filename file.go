@@ -3,7 +3,6 @@ package okp4kviewlib
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -32,16 +31,17 @@ func (man FileMan) GetKeysByOneFile(fkey, findex *os.File, start, end int64) (st
 		man.logger.Error(err)
 		return "", err
 	}
-	man.logger.Debug()
+
+	man.logger.Debug("Will start reading at: ", a)
 
 	b, err := man.GetKeyPosition(findex, end)
 	if err != nil {
 		info, _ := fkey.Stat()
 		b = uint64(info.Size())
+		man.logger.Debug("Will finish reading at the end of the file")
+	} else {
+		man.logger.Debug("Will stop reading at: ", b)
 	}
-
-	fmt.Printf("a-%d b-%d diff-%d", a, b, b-a)
-	fmt.Println("Use kfile name ", fkey.Name())
 
 	_, err = fkey.Seek(int64(a), 0)
 	if err != nil {
@@ -50,7 +50,7 @@ func (man FileMan) GetKeysByOneFile(fkey, findex *os.File, start, end int64) (st
 
 	kbuf := make([]byte, b-a-1)
 
-	fmt.Println("kbuf len ", b-a-1)
+	man.logger.Debug("Key buffer len is ", b-a-1)
 
 	_, err = fkey.Read(kbuf)
 	if err != nil {
@@ -80,6 +80,7 @@ func (man FileMan) GetKeyPosition(findex *os.File, position int64) (key_offset u
 
 	key_offset = binary.LittleEndian.Uint64(buf[0:8])
 	man.logger.Debug("GetKeyPosition: buf uint64 is ", key_offset)
+
 	return
 }
 
