@@ -2,20 +2,25 @@ package okp4kviewlib
 
 import (
 	"errors"
-
 	"io/ioutil"
 	"path/filepath"
+
+	"github.com/sirupsen/logrus"
 )
 
 type List struct {
 	Keys    []*File
 	Indexes []*File
+	logger  *logrus.Logger
+	fileMan *FileMan
 }
 
-func NewList(path string) *List {
+func NewList(path string, logger *logrus.Logger) *List {
 	list := &List{
 		Keys:    []*File{},
 		Indexes: []*File{},
+		logger:  logger,
+		fileMan: NewFileMan(logger),
 	}
 
 	files, err := ioutil.ReadDir(path)
@@ -30,9 +35,9 @@ func NewList(path string) *List {
 
 		switch filepath.Ext(file.Name()) {
 		case ".idx":
-			list.Indexes = append(list.Indexes, LoadFile(path, file.Name()))
+			list.Indexes = append(list.Indexes, list.fileMan.LoadFile(path, file.Name()))
 		case ".json":
-			list.Keys = append(list.Keys, LoadFile(path, file.Name()))
+			list.Keys = append(list.Keys, list.fileMan.LoadFile(path, file.Name()))
 		}
 	}
 
@@ -59,12 +64,17 @@ func (l *List) GetKeys(target, count int64) (data string, err error) {
 
 		target = target + total
 		count = count - total
+	} else{
+		l.logger.Warn("Try to get zero keys")
 	}
 	return
 }
 
 // GetLimitedKeys возвращает ключи из одного файла
 func (l *List) GetLimitedKeys(target, count int64) (data string, total int64, err error) {
+	l.logger.Debug("Target: ", target)
+	l.logger.Debug("Count: ", count)
+
 	k, i, err := l.FindSuitable(target)
 	if err != nil {
 		return
@@ -78,7 +88,7 @@ func (l *List) GetLimitedKeys(target, count int64) (data string, total int64, er
 
 	new_target := target - i.Start
 
-	data, err = GetKeysByOneFile(k.f, i.f, new_target, new_target+count)
+	data, err = l.fileMan.GetKeysByOneFile(k.f, i.f, new_target, new_target+count)
 
 	return
 }
@@ -101,6 +111,9 @@ func (l *List) FindSuitable(target int64) (key *File, index *File, err error) {
 	if key == nil || index == nil {
 		err = errors.New("Index out of range")
 	}
+
+	l.logger.Debug("Use keys file: ", key)
+	l.logger.Debug("Use index file: ", index)
 
 	return
 }

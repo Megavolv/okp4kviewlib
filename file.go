@@ -2,12 +2,14 @@ package okp4kviewlib
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
-	"path/filepath"
-
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 type File struct {
@@ -16,16 +18,26 @@ type File struct {
 	f          *os.File
 }
 
-func GetKeysByOneFile(fkey, findex *os.File, start, end int64) (string, error) {
-	a, err := GetKeyPosition(findex, start)
+type FileMan struct {
+	logger *logrus.Logger
+}
+
+func NewFileMan(logger *logrus.Logger) *FileMan {
+	return &FileMan{logger: logger}
+}
+
+func (man FileMan) GetKeysByOneFile(fkey, findex *os.File, start, end int64) (string, error) {
+	a, err := man.GetKeyPosition(findex, start)
 	if err != nil {
+		man.logger.Error(err)
 		return "", err
 	}
+	man.logger.Debug()
 
-	b, err := GetKeyPosition(findex, end)
+	b, err := man.GetKeyPosition(findex, end)
 	if err != nil {
 		info, _ := fkey.Stat()
-		b = uint32(info.Size())
+		b = uint64(info.Size())
 	}
 
 	fmt.Printf("a-%d b-%d diff-%d", a, b, b-a)
@@ -48,7 +60,10 @@ func GetKeysByOneFile(fkey, findex *os.File, start, end int64) (string, error) {
 	return string(kbuf), nil
 }
 
-func GetKeyPosition(findex *os.File, position int64) (key_offset uint32, err error) {
+func (man FileMan) GetKeyPosition(findex *os.File, position int64) (key_offset uint64, err error) {
+	man.logger.Debug("GetKeyPosition. Position-", position)
+	man.logger.Debug("GetKeyPosition: seek to ", position*8)
+
 	_, err = findex.Seek(position*8, 0)
 	if err != nil {
 		return 0, err
@@ -61,11 +76,14 @@ func GetKeyPosition(findex *os.File, position int64) (key_offset uint32, err err
 		return 0, err
 	}
 
-	key_offset = binary.LittleEndian.Uint32(buf[0:8])
+	man.logger.Debug("GetKeyPosition: buf is ", hex.EncodeToString(buf))
+
+	key_offset = binary.LittleEndian.Uint64(buf[0:8])
+	man.logger.Debug("GetKeyPosition: buf uint64 is ", key_offset)
 	return
 }
 
-func LoadFile(path, name string) *File {
+func (man FileMan) LoadFile(path, name string) *File {
 	data := strings.Split(name, ".")
 
 	start_end := strings.Split(data[1], "-")
