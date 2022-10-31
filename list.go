@@ -45,7 +45,7 @@ func NewList(path string, logger *logrus.Logger) *List {
 
 }
 
-// Умеет получать с пересечением границы файлов
+// Умеет получать данные с пересечением границы файлов
 func (l *List) GetKeys(target, count int64) (data string, err error) {
 	var tdata string
 	var total int64
@@ -71,8 +71,8 @@ func (l *List) GetKeys(target, count int64) (data string, err error) {
 
 // GetLimitedKeys возвращает ключи из одного файла
 func (l *List) GetLimitedKeys(target, count int64) (data string, total int64, err error) {
-	l.logger.Debug("Target: ", target)
-	l.logger.Debug("Count: ", count)
+	l.logger.Debug("GetLimitedKeys. Target: ", target)
+	l.logger.Debug("GetLimitedKeys. Count: ", count)
 
 	k, i, err := l.FindSuitable(target)
 	if err != nil {
@@ -108,11 +108,11 @@ func (l *List) FindSuitable(target int64) (key *File, index *File, err error) {
 	}
 
 	if key == nil || index == nil {
-		err = errors.New("Index out of range")
+		err = errors.New("FindSuitable. Index out of range")
 	}
 
-	l.logger.Debug("Use keys file: ", key)
-	l.logger.Debug("Use index file: ", index)
+	l.logger.Debug("FindSuitable. Use keys file: ", key)
+	l.logger.Debug("FindSuitable. Use index file: ", index)
 
 	return
 }
