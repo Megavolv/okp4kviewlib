@@ -64,9 +64,8 @@ func (l *List) GetKeys(target, count int64) (data string, err error) {
 
 		target = target + total
 		count = count - total
-	} else{
-		l.logger.Warn("Try to get zero keys")
 	}
+
 	return
 }
 
