@@ -108,7 +108,9 @@ func (l *List) FindSuitable(target int64) (key *File, index *File, err error) {
 	}
 
 	if key == nil || index == nil {
-		err = errors.New("FindSuitable. Index out of range")
+		err = errors.New("Index out of range")
+		l.logger.Error("FindSuitable. Index out of range")
+		return
 	}
 
 	l.logger.Debug("FindSuitable. Use keys file: ", key)

@@ -40,7 +40,7 @@ func (man FileMan) GetKeysByOneFile(fkey, findex *os.File, start, end int64) (st
 		b = uint64(info.Size())
 		man.logger.Debug("Will finish reading at the end of the file")
 	} else {
-		man.logger.Debug("Will stop reading at: ", b)
+		man.logger.Debug("Will finish reading at: ", b)
 	}
 
 	_, err = fkey.Seek(int64(a), 0)
@@ -61,11 +61,12 @@ func (man FileMan) GetKeysByOneFile(fkey, findex *os.File, start, end int64) (st
 }
 
 func (man FileMan) GetKeyPosition(findex *os.File, position int64) (key_offset uint64, err error) {
-	man.logger.Debug("GetKeyPosition. Position-", position)
-	man.logger.Debug("GetKeyPosition: seek to ", position*8)
+	man.logger.Debug("GetKeyPosition. Position:", position)
+	man.logger.Debug("GetKeyPosition. Seek to:", position*8)
 
 	_, err = findex.Seek(position*8, 0)
 	if err != nil {
+		man.logger.Error("GetKeyPosition. Seek err: ", err)
 		return 0, err
 	}
 
@@ -73,12 +74,14 @@ func (man FileMan) GetKeyPosition(findex *os.File, position int64) (key_offset u
 
 	_, err = findex.Read(buf)
 	if err != nil {
+		man.logger.Error("GetKeyPosition. Read err: ", err)
 		return 0, err
 	}
 
 	man.logger.Debug("GetKeyPosition: buf is ", hex.EncodeToString(buf))
 
 	key_offset = binary.LittleEndian.Uint64(buf[0:8])
+
 	man.logger.Debug("GetKeyPosition: buf uint64 is ", key_offset)
 
 	return
